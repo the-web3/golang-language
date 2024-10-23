@@ -13,6 +13,9 @@
 #### 2. Go 语言开发环境配置-[教程](https://github.com/the-web3/golang-language/blob/main/docs/2.Go%20%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE.md)
 #### 3. GO 语言基础语法-[教程](https://github.com/the-web3/golang-language/blob/main/docs/3.Go%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95.md)
 #### 4. Go 语言数组与切片-[教程](https://github.com/the-web3/golang-language/blob/main/docs/4.Go%20%E6%95%B0%E7%BB%84%E4%B8%8E%E5%88%87%E7%89%87.md)
+#### 5. Go 语言函数深入-[教程](https://github.com/the-web3/golang-language/blob/main/docs/5.Go%2520%E8%AF%AD%E8%A8%80%E5%87%BD%E6%95%B0%E6%B7%B1%E5%85%A5.md)
+#### 6. Go 语言指针，接口与多态深入-[教程](https://github.com/the-web3/golang-language/blob/main/docs/6.Go%20%E8%AF%AD%E8%A8%80%E6%8C%87%E9%92%88%EF%BC%8C%E6%8E%A5%E5%8F%A3%E4%B8%8E%E5%A4%9A%E6%80%81%E6%B7%B1%E5%85%A5.md)
+#### 7. Go 语言结构体与方法深入-[教程](https://github.com/the-web3/golang-language/blob/main/docs/7.Go%20%E8%AF%AD%E8%A8%80%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%8E%E6%96%B9%E6%B3%95%E6%B7%B1%E5%85%A5.md)
 
 ------------------------------------------------------------------------------------------------------------------------------
 
