@@ -52,4 +52,3 @@ The Web3 是一个专注 Web3 技术解决方案设计与开发、技术教程�
 - discord:  https://discord.gg/muhuXRsK
 - the web3 官网：https://thewebthree.xyz/
 - the web3 技术服务网站：https://web.thewebthree.xyz/
-
