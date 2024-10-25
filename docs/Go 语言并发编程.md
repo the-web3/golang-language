@@ -1,0 +1,642 @@
+# Go 语言并发编程
+## 一.进程，线程与协程
+
+进程、线程与协程是现代计算机程序执行的三种不同的并发模型，它们在资源分配、调度方式和上下文切换等方面有显著区别。理解它们的差异有助于更好地设计并发程序。
+
+
+
+### 1. 进程
+
+进程是计算机中资源分配的基本单位。每个进程都有独立的内存空间、数据段、堆栈等系统资源。当程序运行时，操作系统会创建一个进程来承载程序的执行。
+
+#### 1.1 **特点**
+
+- **独立性**：进程之间是相互独立的，拥有各自的内存空间和系统资源，一个进程的崩溃不会影响其他进程。
+- **资源消耗高**：进程的创建、销毁、以及进程之间的上下文切换代价较高，因为操作系统需要为每个进程分配独立的资源（如内存）。
+- **通信困难**：进程之间通信通常需要通过进程间通信（IPC）机制，如管道、信号、共享内存、消息队列等，复杂度较高。
+- **操作系统调度**：进程是由操作系统的调度器进行调度的，通常采用时间片轮转、优先级等策略。
+
+
+
+#### 1.2 **适用场景**
+
+- 大型复杂的应用程序，例如数据库管理系统、浏览器等，经常通过多个进程来实现模块化或隔离性。
+- 需要高可靠性、隔离性的场景，例如服务之间通过进程通信确保某个服务崩溃不会影响整个系统。
+
+
+
+### 2. 线程
+
+线程是进程中的一个执行单元，也被称为轻量级进程。一个进程可以包含多个线程，这些线程共享进程的内存空间和资源，但每个线程有自己的栈、程序计数器和寄存器。
+
+#### 2.1 **特点**
+
+- **共享内存**：线程之间可以共享进程的全局变量、堆空间等，这使得线程之间的通信更加高效，无需使用 IPC 机制，直接通过共享内存通信。
+- **切换开销较低**：线程的上下文切换比进程要快，因为线程之间共享进程的资源，切换时不需要重新加载内存空间。
+- **多核利用**：多线程程序可以充分利用多核 CPU 来提高计算效率，不同线程可以并发运行在不同的 CPU 核上。
+- **容易出现同步问题**：由于线程共享内存，容易导致竞争条件和数据不一致等问题，因此需要使用锁、信号量等同步机制来确保线程安全。
+- **调度**：线程的调度通常由操作系统内核负责，在不同操作系统中，线程调度可能有所不同。
+
+
+
+#### 2.2 **适用场景**
+
+- **并发编程**：例如 Web 服务器、爬虫等需要同时处理大量任务的场景，使用多线程可以并发处理任务。
+- **IO 密集型任务**：例如网络请求、文件读写等，多个线程可以在不同的任务间切换，充分利用 CPU。
+- **CPU 密集型任务**：例如数据处理、图像处理等，通过多线程可以让任务在多个核心上并行运行。
+
+
+
+### 3. **协程**
+
+协程是一种比线程更加轻量级的并发模型，又被称为“用户态线程”。协程由程序（或者运行时库）本身进行调度，而非由操作系统内核管理。协程允许程序在执行过程中暂停，并在需要的时候恢复执行，因此它常常被称为一种“协作式”的并发模型。
+
+#### 3.1 **特点**
+
+- **轻量级**：协程的创建和销毁成本非常低，通常一个线程可以运行成百上千个协程，而每个协程只消耗极少的内存和资源。
+- **非抢占式调度**：与线程不同，协程的调度是由程序主动控制的，也就是说协程什么时候暂停和切换是由程序决定的，而非操作系统抢占。
+- **上下文切换开销极低**：因为协程的上下文切换在用户态完成，不涉及内核态的切换，开销比线程更小。
+- **单线程执行**：协程通常在单线程中执行，意味着它们之间没有并行执行的能力（除非显式创建多线程的协程环境），也因此没有多线程的同步问题。
+- **适合 IO 密集型任务**：协程常用于 IO 密集型任务，如网络编程，遇到阻塞时，协程可以立即挂起，切换到其他任务继续执行。
+
+#### 3.2 **Golang 协程（Goroutine）**
+
+Golang 提供了原生的协程支持，即 `goroutine`。`goroutine` 的创建方式非常简单，只需在函数调用前加上 `go` 关键字即可启动一个新的 `goroutine`。它通过 Go 运行时来调度 `goroutine`，实现了轻量级的并发。
+
+```Go
+go func() {
+    fmt.Println("Hello from goroutine")
+}()
+```
+
+`goroutine` 是由 Go 运行时调度的，而非依赖操作系统线程。Go 运行时有一个 M
+
+的调度模型，即多个 `goroutine` 可以被分配到少量的 OS 线程上执行。
+
+
+
+#### **适用场景**
+
+- **大规模并发任务**：协程适合大规模的并发任务，尤其是涉及大量 IO 操作的应用，如 Web 服务器、爬虫、异步任务处理等。
+- **事件驱动模型**：协程可以很好地实现事件驱动的编程模型，避免复杂的回调逻辑。
+
+
+
+### 4. **进程、线程与协程的比较**
+
+|    特性    |               进程               | 线程                 |            协程            |
+| :--------: | :------------------------------: | -------------------- | :------------------------: |
+|    定义    |        独立的程序执行单元        | 进程中的执行单元     |     用户态的轻量级线程     |
+|  资源开销  |    高（需要独立的内存和资源）    | 中等（共享进程资源） | 低（极少的内存和调度开销） |
+| 上下文切换 |              开销高              | 开销中等             |           开销低           |
+|   并发性   |                是                | 是                   |    否（但可以并发执行）    |
+|  调度方式  |         操作系统内核调度         | 操作系统内核调度     |        程序自主调度        |
+|  通信方式  |         IPC（复杂、慢）          | 共享内存（需同步）   |  共享内存（没有竞争问题）  |
+|  适用场景  | 独立程序执行，隔离性要求高的任务 | 并发处理，多核利用   | 大规模并发，IO 密集型任务  |
+
+
+### 5. 小结
+
+**进程**：是操作系统中资源分配的最小单位，进程间隔离较好，但通信复杂且开销大；适合隔离性高、资源分配独立的应用，进程间通信较为复杂。
+
+**线程**：是操作系统中调度的最小单位，线程共享进程的资源，但同步机制复杂，切换开销比进程小；适合需要共享资源、多核并行的应用，通信方便但需要同步机制。
+
+**协程**：是用户态的轻量级执行单元，协程之间切换开销极小，非常适合高并发场景；适合轻量级的并发处理，特别是 IO 密集型任务，具有极低的创建和调度开销，但不支持真正的并行处理（除非和多线程结合）
+
+
+
+## 二.  **Goroutine 基本使用**
+
+### 1. 启动 Goroutine
+
+只需要在函数调用前加上 `go` 关键字即可启动一个 Goroutine：
+
+```Go
+package main
+
+import (
+        "fmt"
+        "time"
+)
+
+func sayHello() {
+    for i := 0; i < 5; i++ {
+        fmt.Println("Hello")
+        time.Sleep(100 * time.Millisecond)
+    }
+}
+
+func main() {
+    go sayHello() // 启动一个 Goroutine
+    time.Sleep(1 * time.Second) // 主程序等待 Goroutine 执行完成
+    fmt.Println("Main function")
+}
+```
+
+在这个例子中，`sayHello` 函数在 Goroutine 中运行，主函数不等待 `sayHello` 执行完成，而是继续往下执行。但为了防止主函数过早结束，可以使用 `time.Sleep` 来等待。
+
+
+
+### 2. 使用匿名函数
+
+也可以使用匿名函数直接作为 Goroutine 启动：
+
+```Go
+package main
+
+import (
+        "fmt"
+        "time"
+)
+
+func main() {
+    go func() {
+        for i := 0; i < 5; i++ {
+            fmt.Println("Inside Goroutine")
+            time.Sleep(100 * time.Millisecond)
+        }
+    }()
+    
+    time.Sleep(1 * time.Second)
+    fmt.Println("Main function")
+}
+```
+
+### 3. 同步 Goroutine
+
+Goroutine 是并发执行的，如果要确保 Goroutine 执行完成，可以使用 **WaitGroup** 来同步：
+
+```Go
+package main
+
+import (
+        "fmt"
+        "sync"
+)
+
+func printNumbers(wg *sync.WaitGroup) {
+    defer wg.Done() // 通知 WaitGroup 当前 Goroutine 已完成
+    for i := 1; i <= 5; i++ {
+        fmt.Println(i)
+    }
+}
+
+func main() {
+    var wg sync.WaitGroup
+    wg.Add(1) // 增加 Goroutine 计数
+    go printNumbers(&wg)
+    
+    wg.Wait() // 等待所有 Goroutine 执行完成
+    fmt.Println("Main function finished")
+}
+```
+
+在这个例子中，`sync.WaitGroup` 用于等待 Goroutine 执行完毕，`wg.Add(1)` 表示我们启动了一个 Goroutine，`wg.Wait()` 会阻塞主线程，直到 Goroutine 调用 `wg.Done()`。
+
+
+
+### 3.  Goroutine 与 Channel 结合
+
+Go 中的 **Channel** 是 Goroutine 之间通信的机制，可以配合 Goroutine 进行数据的传递：
+
+```Go
+package main
+
+import "fmt"
+
+func sum(a, b int, c chan int) {
+    c <- a + b // 将计算结果发送到 channel 中
+}
+
+func main() {
+    c := make(chan int)
+    
+    go sum(3, 4, c)
+    
+    result := <-c // 从 channel 中接收结果
+    fmt.Println("Sum is:", result)
+}
+```
+
+在这里，我们启动了一个 Goroutine 进行加法运算，并通过 channel 将结果传递回主 Goroutine。
+
+
+
+## 三. **Goroutine 实际用例**
+
+在实际开发中，**Goroutine** 常被用于处理并发任务，如 I/O 操作、网络请求、计算密集型任务等。下面列出一些 Goroutine 实际用例，展示如何在不同场景中使用 Goroutine 来提高程序的性能和响应速度。
+
+
+
+### 1. 并发处理 HTTP 请求
+
+当需要同时处理多个 HTTP 请求时，可以为每个请求启动一个 Goroutine，从而并行执行任务，提升效率。
+
+```Go
+package main
+
+import (
+    "fmt"
+    "net/http"
+    "sync"
+)
+
+func fetchURL(wg *sync.WaitGroup, url string) {
+    defer wg.Done() // 确保任务完成后减去一个等待计数
+
+    resp, err := http.Get(url)
+    if err != nil {
+            fmt.Println("Error fetching", url, ":", err)
+            return
+    }
+    defer resp.Body.Close()
+
+    fmt.Println("Fetched", url, "with status:", resp.Status)
+}
+
+func main() {
+    var wg sync.WaitGroup
+    urls := []string{
+        "https://example.com",
+        "https://golang.org",
+        "https://github.com",
+    }
+
+    for _, url := range urls {
+        wg.Add(1)
+        go fetchURL(&wg, url)
+    }
+
+    wg.Wait() // 等待所有 Goroutine 完成
+    fmt.Println("All URLs fetched")
+}
+```
+
+**用例解析：**
+
+- 这里使用 Goroutine 并发请求多个 URL，`sync.WaitGroup` 确保主程序等待所有请求完成。
+- 这种模式常用于爬虫、并发抓取数据、多个 API 请求的场景。
+
+
+
+### 2. 并行文件处理
+
+在文件处理任务中，可以使用多个 Goroutine 并发读取、写入或处理不同的文件，提高处理速度。
+
+```Go
+package main
+
+import (
+    "fmt"
+    "io/ioutil"
+    "os"
+    "sync"
+)
+
+func readFile(wg *sync.WaitGroup, filename string) {
+    defer wg.Done()
+
+    data, err := ioutil.ReadFile(filename)
+    if err != nil {
+            fmt.Println("Error reading file", filename, ":", err)
+            return
+    }
+    fmt.Println("File", filename, "content length:", len(data))
+}
+
+func main() {
+    var wg sync.WaitGroup
+    files := []string{"file1.txt", "file2.txt", "file3.txt"}
+
+    for _, file := range files {
+            wg.Add(1)
+            go readFile(&wg, file)
+    }
+
+    wg.Wait()
+    fmt.Println("All files processed")
+}
+```
+
+**用例解析：**
+
+- 此示例中，多个 Goroutine 并发读取文件内容，从而加快文件处理速度。
+- 适合于日志处理、批量数据读取等场景。
+
+
+
+### 3. 并发计算任务
+
+对于计算密集型的任务，可以将任务分割为多个子任务，利用 Goroutine 并行计算。
+
+```Go
+package main
+
+import (
+        "fmt"
+        "sync"
+)
+
+func calculateSum(wg *sync.WaitGroup, nums []int, result chan int) {
+    defer wg.Done()
+
+    sum := 0
+    for _, num := range nums {
+            sum += num
+    }
+
+    result <- sum // 将计算结果发送到 channel 中
+}
+
+func main() {
+    numbers := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+    result := make(chan int, 2) // 创建带缓冲的 channel
+    var wg sync.WaitGroup
+
+    wg.Add(2)
+    go calculateSum(&wg, numbers[:len(numbers)/2], result) // 计算前半部分
+    go calculateSum(&wg, numbers[len(numbers)/2:], result) // 计算后半部分
+
+    wg.Wait()
+    close(result)
+
+    total := 0
+    for sum := range result {
+            total += sum
+    }
+
+    fmt.Println("Total sum is:", total)
+}
+```
+
+**用例解析：**
+
+- 将数组拆分为两部分，并通过两个 Goroutine 并发计算它们的和，最后汇总结果。
+- 这种方式适用于多核 CPU 下的大规模数据处理、矩阵运算等场景。
+
+
+
+### 4. 并发处理数据库查询
+
+在数据库查询中，可以通过 Goroutine 同时执行多个查询，减少等待时间，提高数据库查询的效率。
+
+```Go
+package main
+
+import (
+    "database/sql"
+    "fmt"
+    "log"
+    "sync"
+
+    _ "github.com/lib/pq" // PostgreSQL 驱动
+)
+
+func queryDB(wg *sync.WaitGroup, db *sql.DB, query string) {
+    defer wg.Done()
+
+    rows, err := db.Query(query)
+    if err != nil {
+            log.Fatal("Error executing query:", err)
+            return
+    }
+    defer rows.Close()
+
+    var result string
+    for rows.Next() {
+            err := rows.Scan(&result)
+            if err != nil {
+                    log.Fatal("Error scanning result:", err)
+                    return
+            }
+            fmt.Println("Query result:", result)
+    }
+}
+
+func main() {
+    db, err := sql.Open("postgres", "user=postgres password=secret dbname=test sslmode=disable")
+    if err != nil {
+            log.Fatal("Error opening database:", err)
+    }
+    defer db.Close()
+
+    var wg sync.WaitGroup
+    queries := []string{
+            "SELECT name FROM users WHERE id = 1",
+            "SELECT name FROM users WHERE id = 2",
+            "SELECT name FROM users WHERE id = 3",
+    }
+
+    for _, query := range queries {
+            wg.Add(1)
+            go queryDB(&wg, db, query)
+    }
+
+    wg.Wait()
+    fmt.Println("All queries executed")
+}
+```
+
+**用例解析：**
+
+- 通过并发执行多个数据库查询，可以减少单一查询等待时间，提升系统的响应速度。
+- 适用于高并发的 Web 服务或需要大量数据库查询的应用。
+
+
+
+### 5. WebSocket 并发连接处理
+
+在 WebSocket 应用中，可以通过 Goroutine 同时处理多个客户端的连接。
+
+```Go
+package main
+
+import (
+    "fmt"
+    "net/http"
+
+    "github.com/gorilla/websocket"
+)
+
+var upgrader = websocket.Upgrader{
+    CheckOrigin: func(r *http.Request) bool {
+            return true
+    },
+}
+
+func handleConnection(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+            fmt.Println("Error upgrading connection:", err)
+            return
+    }
+    defer conn.Close()
+
+    for {
+        messageType, message, err := conn.ReadMessage()
+        if err != nil {
+                fmt.Println("Error reading message:", err)
+                return
+        }
+        fmt.Printf("Received: %s\n", message)
+
+        if err = conn.WriteMessage(messageType, message); err != nil {
+                fmt.Println("Error writing message:", err)
+                return
+        }
+    }
+}
+
+func main() {
+    http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+            go handleConnection(w, r) // 每个连接使用一个 Goroutine 处理
+    })
+
+    fmt.Println("WebSocket server started at :8080")
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+**用例解析：**
+
+- 这里使用 Goroutine 来处理每个 WebSocket 连接，使服务器能够并发处理多个客户端。
+- 适用于实时应用，如聊天室、多人在线游戏、实时数据推送等。
+
+
+
+### 6. 基于 **Goroutine, Channel 和 Select** 写一个定时任务
+
+
+
+
+
+## 四. **Goroutine 底层实现简单介绍**
+
+在 Go 语言中，**Goroutine** 是一种轻量级的线程实现，其底层依赖于 Go 运行时的调度器管理，而非操作系统的线程。Go 通过 **用户态线程调度**（User-level Thread Scheduling）实现了高效的并发编程。下面将介绍 Goroutine 的底层实现及其核心机制。
+
+
+
+### 1. Goroutine 的轻量级设计
+
+与操作系统的线程不同，Goroutine 是由 Go 运行时管理的。传统的操作系统线程有较大的栈空间（通常是 1MB 或更多），而 Goroutine 在创建时只需要约 2KB 的栈空间。Goroutine 的栈空间可以根据需求动态扩展，最大可达到 1GB。这种轻量级设计使得数以万计的 Goroutine 可以并发运行，而不会耗尽系统资源。
+
+#### 关键点：
+
+- **小栈空间**：初始的 2KB 栈空间让 Goroutine 的创建和切换非常轻量。
+- **栈空间动态增长**：随着 Goroutine 执行，Go 运行时会自动增长栈空间，避免栈溢出。
+
+
+
+### 2. Go 调度器
+
+Go 使用了自己的调度器（**Goroutine 调度器**），称为 **M 调度模型**。这种模型将 M 个 Goroutine 映射到 N 个内核线程上，由调度器管理 Goroutine 的执行。
+
+
+
+#### 2.1 三大核心组件：
+
+- **G（Goroutine）**：代表 Goroutine，每个 Goroutine 都包含执行函数、栈空间以及任务状态。
+- **P（Processor）**：代表逻辑处理器，负责调度 G（Goroutine）。P 维持一个 Goroutine 队列（runqueue），P 的数量由 `GOMAXPROCS` 决定。默认情况下，`GOMAXPROCS` 等于机器的 CPU 核数。
+- **M（Machine）**：代表内核线程（操作系统的线程），它用于执行 P 中的 Goroutine。M 可以执行 P 的 Goroutine，但一个 M 在任意时刻只能绑定一个 P。
+
+#### 2.2 调度模型：
+
+- 当 Go 程序运行时，Goroutine 被分配到 P 的本地运行队列中。M 绑定一个 P 后，会从 P 的本地队列中取出 Goroutine 执行。
+- 如果一个 P 的本地队列没有任务，它可以从全局运行队列中获取任务，或从其他 P 中窃取任务（**Work Stealing**）。
+- 调度器负责管理 Goroutine 的创建、执行、阻塞与恢复，以确保充分利用多核 CPU。
+
+```Go
+M (OS Thread) -- 执行 G(Goroutine)
+   ^
+   |
+   P (Processor) -- 调度 G
+```
+
+### 3. Goroutine 的生命周期
+
+Goroutine 的生命周期分为以下几个阶段：
+
+- **新建（new）**：当使用 `go` 关键字启动 Goroutine 时，Go 运行时会创建一个新的 G 实例，并将其放入 P 的运行队列中等待调度。
+- **就绪（runnable）**：在 P 的运行队列中等待调度的 Goroutine 处于就绪状态。
+- **运行（running）**：当 P 将一个 Goroutine 分配给 M 后，该 Goroutine 进入运行状态。
+- **阻塞（blocked）**：当 Goroutine 进行 I/O 操作或执行阻塞操作时，它会被标记为阻塞状态，M 可能会释放 P 去执行其他就绪的 Goroutine。
+- **退出（dead）**：当 Goroutine 执行结束后，它会进入退出状态，运行时会清理相关资源。
+
+
+
+### 4. Goroutine 调度的核心机制
+
+#### 4.1 **抢占式调度**：
+
+Go 运行时使用 **抢占式调度** 来确保 Goroutine 不会长期占用 CPU 资源。调度器会周期性地检查 Goroutine 是否执行了过长时间，如果 Goroutine 运行时间过长（如陷入死循环），调度器会中断它的执行并将控制权交给其他 Goroutine。这种机制避免了一个 Goroutine 长期独占 CPU。
+
+
+
+#### 4.2 **协作式调度**：
+
+Go 语言中的一些阻塞操作（如 I/O 操作、网络请求、Channel 操作等）会主动让出 CPU 控制权，进入阻塞状态，调度器会调度其他 Goroutine 继续执行。
+
+- **I/O 操作**：当一个 Goroutine 需要等待 I/O 时，调度器会将其标记为阻塞状态，并调度其他 Goroutine。
+- **Channel 操作**：当 Goroutine 通过 Channel 通信时，如果没有可用数据，调度器会将该 Goroutine 阻塞，等待数据准备好。
+
+
+
+### 5. Goroutine 的栈管理
+
+Go 语言对 Goroutine 的栈进行了精细的管理。与传统线程不同，Goroutine 的栈是动态增长的，初始仅 2KB。
+
+#### 5.1 **栈增长**
+
+- Go 运行时使用分段栈（Segmented Stack）机制，当 Goroutine 的栈空间不足时，会自动扩展栈。扩展栈的过程不会影响程序执行，因为 Go 会将现有栈内容复制到新的栈空间中。
+- 这种动态调整机制保证了 Goroutine 在消耗较少资源的同时可以处理更复杂的计算任务。
+
+#### 5.2 **栈缩减**
+
+- 如果 Goroutine 执行完任务，其栈空间可以自动缩减，释放多余的内存给其他 Goroutine 使用。
+
+
+
+### 6. Goroutine 调度中的垃圾回收
+
+Go 的垃圾回收器（GC）是并发的，Goroutine 调度器和垃圾回收器之间紧密协作，确保在进行垃圾回收时，Goroutine 仍然可以有效运行。GC 会定期扫描 Goroutine 的栈，回收不再使用的内存。由于 Goroutine 的栈通常较小，GC 能更快地完成标记和清除工作。
+
+
+
+### 7. Go 调度器与 GOMAXPROCS
+
+`GOMAXPROCS` 环境变量或函数控制 Go 程序中能同时运行的 P（逻辑处理器）数量。默认情况下，`GOMAXPROCS` 的值等于机器的 CPU 核数，但也可以通过 `runtime.GOMAXPROCS(n)` 调整。
+
+```Go
+package main
+
+import (
+    "fmt"
+    "runtime"
+)
+
+func main() {
+    // 设置可并行运行的 Goroutine 数量
+    runtime.GOMAXPROCS(2)
+
+    for i := 0; i < 5; i++ {
+        go func(i int) {
+                fmt.Println(i)
+        }(i)
+    }
+
+    fmt.Scanln() // 等待输入，防止主 Goroutine 过早退出
+}
+```
+
+- **解释：**`GOMAXPROCS(2)` 设置 Go 使用 2 个 CPU 核心，这意味着调度器会创建 2 个 P 处理 Goroutine 的调度。
+
+### 8. 总结
+
+Goroutine 的底层实现基于 Go 运行时的高效调度模型，通过轻量级线程、抢占式调度、动态栈管理等机制，极大地提高了并发执行的性能。M 的调度模型将大量 Goroutine 映射到较少的操作系统线程上，使得 Go 程序能够在不消耗大量系统资源的情况下处理大量并发任务，这也是 Go 在现代高并发系统中非常流行的原因之一。
+
+
+
+## 五.小结
+
+本节讲解了 Go 的并发的基本使用，实际用例和 GMP 调度模型，这里对 GMP 模型仅仅是简单介绍，后面我们会出一篇把 GMP 模型说透的文章。
+
