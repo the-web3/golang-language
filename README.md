@@ -18,12 +18,24 @@
 #### 7. Go 语言指针，接口与多态深入-[教程](https://github.com/the-web3/golang-language/blob/main/docs/6.Go%20%E8%AF%AD%E8%A8%80%E6%8C%87%E9%92%88%EF%BC%8C%E6%8E%A5%E5%8F%A3%E4%B8%8E%E5%A4%9A%E6%80%81%E6%B7%B1%E5%85%A5.md)
 
 ------------------------------------------------------------------------------------------------------------------------------
-
-### 实战篇
+### 高级篇
+#### 8. Go 深入理解 Go 语言的 MAP-[教程](https://github.com/the-web3/golang-language/blob/main/docs/8.%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%20Go%20%E8%AF%AD%E8%A8%80%E7%9A%84%20Map.md)
+#### 9. Go 语言的 Context 最佳实战-[教程](https://github.com/the-web3/golang-language/blob/main/docs/9.%20Go%20%E8%AF%AD%E8%A8%80%E7%9A%84%20Context%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E6%88%98.md)
+#### 10. 玩转Go的 channel-[教程](https://github.com/the-web3/golang-language/blob/main/docs/10.%E7%8E%A9%E8%BD%ACGo%E7%9A%84%20channel.md)
+#### 11. Go 语言并发编程-[教程](https://github.com/the-web3/golang-language/blob/main/docs/10.%E7%8E%A9%E8%BD%ACGo%E7%9A%84%20channel.md)
+#### 12. 从物理硬件开始说透 Go 语言内存机制-[教程]()
+#### 13. 真正了解 Go 的 GCC 机制-[教程]()
+#### 14. Go 语言并发问题与解决策略-[教程]()
+#### 15. Go真正了解 Go 的 GCC 机制-[教程]()
 
 
 ------------------------------------------------------------------------------------------------------------------------------
+### 实战篇
+#### 16.基于 net/http 封装一个 Http Server 实战-[教程]()
 
+
+
+------------------------------------------------------------------------------------------------------------------------------
 
 
 ## 联系作者
