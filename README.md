@@ -1,6 +1,6 @@
 # The Web3 社区 Golang 课程资料
 
-本教程由 The Web3 社区出品
+本教程由 The Web3 社区出品, The Web3 社区由 DappLink 孵化。
 
 [![DappLink](https://raw.githubusercontent.com/eniac-x-labs/.github/main/profile/dapplink.jpeg)](https://www.dapplink.xyz/zh)
 
